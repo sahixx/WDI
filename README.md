@@ -1,2 +1,0 @@
-# WDI
-Team Project WDI
