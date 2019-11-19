@@ -33,7 +33,7 @@ public class SchemaMatching {
     }
 
     public static void instanceBased() throws Exception {
-
+ 
     }
 
     public static void labelBased() throws Exception {
@@ -86,6 +86,7 @@ public class SchemaMatching {
                 br.write(node_id + "," + url + "," + String.format("'%s','%s'", cor.getFirstRecord().getName(), cor.getSecondRecord().getName()) + "\n");
                 br.close();
                 writer2.close();
+            }
         }
     }
 }
