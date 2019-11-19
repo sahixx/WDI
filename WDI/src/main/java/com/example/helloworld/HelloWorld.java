@@ -33,7 +33,7 @@ public class HelloWorld {
 
     public static void main(String[] args) throws Exception {
 
-        CSVReader reader = new CSVReader(new FileReader("offers.csv"));
+        CSVReader reader = new CSVReader(new FileReader("gs_offers_kvp.csv"));
         reader.readNext(); // read the header and ignore it
         String[] line; // store one line of offer
 
@@ -41,9 +41,9 @@ public class HelloWorld {
         while ((line = reader.readNext()) != null) {
 
             //--------------------- create a csv out of each offer -----------------------
-            String node_id = line[4];
-            String url = line[3];
-            String kvp = line[6];
+            String node_id = line[1];
+            String url = line[0];
+            String kvp = line[2];
             JSONObject kvpJson = new JSONObject(kvp);
             Iterator iter = kvpJson.keys();
             String keys = "";
