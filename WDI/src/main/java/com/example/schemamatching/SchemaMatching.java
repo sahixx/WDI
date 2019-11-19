@@ -1,4 +1,4 @@
-package com.example.helloworld;
+package com.example.schemamatching;
 
 import java.io.File;
 import java.io.FileReader;
@@ -12,13 +12,9 @@ import de.uni_mannheim.informatik.dws.winter.model.defaultmodel.Attribute;
 import de.uni_mannheim.informatik.dws.winter.model.defaultmodel.CSVRecordReader;
 import de.uni_mannheim.informatik.dws.winter.model.defaultmodel.Record;
 import de.uni_mannheim.informatik.dws.winter.model.defaultmodel.comparators.LabelComparatorJaccard;
-import de.uni_mannheim.informatik.dws.winter.model.defaultmodel.comparators.LabelComparatorLevenshtein;
 import de.uni_mannheim.informatik.dws.winter.processing.Processable;
-import de.uni_mannheim.informatik.dws.winter.utils.WinterLogManager;
-import org.slf4j.Logger;
 
 import org.json.JSONObject;
-import org.json.JSONString;
 //import org.json.simple.JSONArray;
 //import org.json.simple.parser.ParseException;
 //import org.json.simple.parser.JSONParser;
@@ -27,11 +23,20 @@ import java.util.Iterator;
 import java.io.FileWriter;
 import java.io.BufferedWriter;
 
-public class HelloWorld {
+public class SchemaMatching {
 
 //    private static final Logger logger = WinterLogManager.activateLogger("default");
 
     public static void main(String[] args) throws Exception {
+        //labelBased();
+        instanceBased();
+    }
+
+    public static void instanceBased() throws Exception {
+
+    }
+
+    public static void labelBased() throws Exception {
 
         CSVReader reader = new CSVReader(new FileReader("gs_offers_kvp.csv"));
         reader.readNext(); // read the header and ignore it
@@ -44,6 +49,9 @@ public class HelloWorld {
             String node_id = line[1];
             String url = line[0];
             String kvp = line[2];
+            if (kvp.length() == 0) {
+                continue;
+            }
             JSONObject kvpJson = new JSONObject(kvp);
             Iterator iter = kvpJson.keys();
             String keys = "";
@@ -72,42 +80,12 @@ public class HelloWorld {
 
             // print results
             for (Correspondence<Attribute, Attribute> cor : correspondences.get()) {
-//            logger.info(String.format("[%s]'%s' <-> [%s]'%s' (%.4f)",
-//                    cor.getFirstRecord().getIdentifier(),
-//                    cor.getFirstRecord().getName(),
-//                    cor.getSecondRecord().getIdentifier(),
-//                    cor.getSecondRecord().getName(),
-//                    cor.getSimilarityScore()));
                 File file = new File("./goldstandard.csv");
                 FileWriter writer2 = new FileWriter(file, true);
                 BufferedWriter br = new BufferedWriter(writer2);
                 br.write(node_id + "," + url + "," + String.format("'%s','%s'", cor.getFirstRecord().getName(), cor.getSecondRecord().getName()) + "\n");
                 br.close();
                 writer2.close();
-//                writer2.append(node_id + "," + url + "," + String.format("'%s','%s'", cor.getFirstRecord().getName(), cor.getSecondRecord().getName()));
-//                writer2.close();
-
-                //System.out.println(node_id + "," + url + "," + String.format("'%s','%s'", cor.getFirstRecord().getName(), cor.getSecondRecord().getName()));
-            }
-
-//        // Initialize Matching Engine
-//        MatchingEngine engine = new MatchingEngine<Record, Attribute>();
-//
-//        Processable<Correspondence<Attribute, Record>> correspondences = engine.runLabelBasedSchemaMatching(data1.getSchema(), data2.getSchema(), new LabelComparatorLevenshtein(), 0.4);
-//
-//        // print results
-//        for(Correspondence<Attribute, Record> cor : correspondences.get()) {
-//            logger.info(String.format("[%s]'%s' <-> [%s]'%s' (%.4f)",
-//                    cor.getFirstRecord().getIdentifier(),
-//                    cor.getFirstRecord().getName(),
-//                    cor.getSecondRecord().getIdentifier(),
-//                    cor.getSecondRecord().getName(),
-//                    cor.getSimilarityScore()));
-//        }
-
-            // delete file
-//            File file = new File("./offer.csv");
-//            file.delete();
         }
     }
 }
