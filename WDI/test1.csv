@@ -1,0 +1,14 @@
+Processor Core,Average Seek Time,Rotational Speed
+'single-core','15ms','5400rpm'
+'dual-core','8.2ms','7200rpm'
+'triple-core','3.5ms','10000rpm'
+'quad-core','4.1ms','15000rpm'
+'hexa-core','3.4ms'
+'octa-core','10ms',
+'deca-core','3.6ms'
+'dodeca-core','7.5ms'
+'tetradeca-core'
+'pentadeca-core'
+'hexadeca-core'
+'octadeca-core'
+'docasa-core'
