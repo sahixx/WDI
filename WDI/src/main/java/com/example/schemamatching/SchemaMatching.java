@@ -15,6 +15,7 @@ import de.uni_mannheim.informatik.dws.winter.model.defaultmodel.Attribute;
 import de.uni_mannheim.informatik.dws.winter.model.defaultmodel.CSVRecordReader;
 import de.uni_mannheim.informatik.dws.winter.model.defaultmodel.Record;
 import de.uni_mannheim.informatik.dws.winter.model.defaultmodel.comparators.LabelComparatorJaccard;
+import de.uni_mannheim.informatik.dws.winter.model.defaultmodel.comparators.LabelComparatorLevenshtein;
 import de.uni_mannheim.informatik.dws.winter.processing.Processable;
 
 import de.uni_mannheim.informatik.dws.winter.matching.blockers.BlockingKeyIndexer.VectorCreationMethod;
@@ -28,8 +29,12 @@ import de.uni_mannheim.informatik.dws.winter.model.defaultmodel.CSVRecordReader;
 import de.uni_mannheim.informatik.dws.winter.model.defaultmodel.Record;
 import de.uni_mannheim.informatik.dws.winter.model.defaultmodel.blocking.DefaultAttributeValuesAsBlockingKeyGenerator;
 import de.uni_mannheim.informatik.dws.winter.processing.Processable;
+import de.uni_mannheim.informatik.dws.winter.similarity.string.GeneralisedStringJaccard;
 import de.uni_mannheim.informatik.dws.winter.similarity.vectorspace.VectorSpaceMaximumOfContainmentSimilarity;
 import de.uni_mannheim.informatik.dws.winter.similarity.vectorspace.VectorSpaceCosineSimilarity;
+import de.uni_mannheim.informatik.dws.winter.similarity.vectorspace.VectorSpaceJaccardSimilarity;
+import de.uni_mannheim.informatik.dws.winter.similarity.string.LevenshteinSimilarity;
+import de.uni_mannheim.informatik.dws.winter.similarity.vectorspace.VectorSpaceSimilarity;
 import de.uni_mannheim.informatik.dws.winter.utils.WinterLogManager;
 
 import org.json.JSONObject;
@@ -40,14 +45,15 @@ import org.json.JSONObject;
 import java.util.Iterator;
 import java.io.FileWriter;
 import java.io.BufferedWriter;
+import java.util.Map;
 
 public class SchemaMatching {
 
 //    private static final Logger logger = WinterLogManager.activateLogger("default");
 
     public static void main(String[] args) throws Exception {
-        //labelBased();
-        instanceBased();
+        labelBased();
+        //instanceBased();
     }
 
     public static void instanceBased() throws Exception {
@@ -100,9 +106,9 @@ public class SchemaMatching {
 
         // load data
         DataSet<Record, Attribute> data1 = new HashedDataSet<Record, Attribute>();
-        new CSVRecordReader(0).loadFromCSV(new File("test1.csv"), data1);
+        new CSVRecordReader(0).loadFromCSV(new File("dict_computers_formatted.csv"), data1);
         DataSet<Record, Attribute> data2 = new HashedDataSet<Record, Attribute>();
-        new CSVRecordReader(0).loadFromCSV(new File("test2.csv"), data2);
+        new CSVRecordReader(0).loadFromCSV(new File("offers_computers.csv"), data2);
 
         // Initialize Matching Engine
         MatchingEngine<Record, Attribute> engine = new MatchingEngine<Record, Attribute>();
@@ -114,18 +120,14 @@ public class SchemaMatching {
                 data2,
                 new DefaultAttributeValuesAsBlockingKeyGenerator(data1.getSchema()),
                 new DefaultAttributeValuesAsBlockingKeyGenerator(data2.getSchema()),
-                VectorCreationMethod.TermFrequencies,
+                VectorCreationMethod.TFIDF,
                 new VectorSpaceCosineSimilarity(),
                 0.0);
 
 
-
-
-
-
         // print results
         for(Correspondence<Attribute, MatchableValue> cor : correspondences.get()) {
-            System.out.println(String.format("'%s' <-> '%s' (%.4f)", cor.getFirstRecord().getName(), cor.getSecondRecord().getName(), cor.getSimilarityScore()));
+            System.out.println(String.format("'%s','%s',%.4f", cor.getFirstRecord().getName(), cor.getSecondRecord().getName(), cor.getSimilarityScore()));
 //            logger.info(String.format("'%s' <-> '%s' (%.4f)", cor.getFirstRecord().getName(), cor.getSecondRecord().getName(), cor.getSimilarityScore()));
             if(cor.getCausalCorrespondences()!=null) {
                 for(Correspondence<MatchableValue, Matchable> cause : cor.getCausalCorrespondences().get()) {
@@ -134,14 +136,14 @@ public class SchemaMatching {
                 }
 //                logger.info("");
             }
-            System.out.println("\n");
+//            System.out.println("\n");
 
         }
     }
 
     public static void labelBased() throws Exception {
 
-        CSVReader reader = new CSVReader(new FileReader("gs_offers_kvp.csv"));
+        CSVReader reader = new CSVReader(new FileReader("chosen_offers_computer_LB.csv"));
         reader.readNext(); // read the header and ignore it
         String[] line; // store one line of offer
 
@@ -159,10 +161,14 @@ public class SchemaMatching {
             Iterator iter = kvpJson.keys();
             String keys = "";
             while (iter.hasNext()) {
+                String key = iter.next().toString().toLowerCase();
+                if (key.endsWith(":")) {
+                    key = key.substring(0, key.length() - 1);
+                }
                 if (keys.length() == 0) {
-                    keys = iter.next().toString();
+                    keys = key;
                 } else {
-                    keys = keys + "," + iter.next();
+                    keys = keys + "," + key;
                 }
             }
             FileWriter writer = new FileWriter("./offer.csv");
@@ -172,21 +178,21 @@ public class SchemaMatching {
 
             // load data
             DataSet<Record, Attribute> data1 = new HashedDataSet<Record, Attribute>();
-            new CSVRecordReader(0).loadFromCSV(new File("keys_dict.csv"), data1);
+            new CSVRecordReader(0).loadFromCSV(new File("dict_comp_formatted.csv"), data1);
             DataSet<Record, Attribute> data2 = new HashedDataSet<Record, Attribute>();
             new CSVRecordReader(0).loadFromCSV(new File("offer.csv"), data2);
 
             // Initialize Matching Engine
             MatchingEngine engine = new MatchingEngine<Attribute, Attribute>();
 
-            Processable<Correspondence<Attribute, Attribute>> correspondences = engine.runLabelBasedSchemaMatching(data1.getSchema(), data2.getSchema(), new LabelComparatorJaccard(), 0.5);
+            Processable<Correspondence<Attribute, Attribute>> correspondences = engine.runLabelBasedSchemaMatching(data1.getSchema(), data2.getSchema(), new LabelComparatorLevenshtein(), 0.5);
 
             // print results
             for (Correspondence<Attribute, Attribute> cor : correspondences.get()) {
-                File file = new File("./goldstandard.csv");
+                File file = new File("./output_LB_computers_levenshtein.csv");
                 FileWriter writer2 = new FileWriter(file, true);
                 BufferedWriter br = new BufferedWriter(writer2);
-                br.write(node_id + "," + url + "," + String.format("'%s','%s'", cor.getFirstRecord().getName(), cor.getSecondRecord().getName()) + "\n");
+                br.write(node_id + "," + url + "," + String.format("%s,%s,%s", cor.getFirstRecord().getName(), cor.getSecondRecord().getName(), cor.getSimilarityScore()) + "\n");
                 br.close();
                 writer2.close();
             }
