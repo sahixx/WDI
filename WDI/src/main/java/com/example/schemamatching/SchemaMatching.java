@@ -56,7 +56,7 @@ public class SchemaMatching {
         //instanceBased();
     }
 
-    public static void instanceBased() throws Exception {
+  //  public static void instanceBased() throws Exception {
 //        CSVReader reader_dict = new CSVReader(new FileReader("dict.csv"));
 //        reader_dict.readNext(); // read the header and ignore it
 //        String[] line; // store one line of offer
@@ -104,7 +104,7 @@ public class SchemaMatching {
 //            //---------------------------------------------------------------------------
 //        }
 
-        // load data
+      /*  // load data
         DataSet<Record, Attribute> data1 = new HashedDataSet<Record, Attribute>();
         new CSVRecordReader(0).loadFromCSV(new File("dict_computers_formatted.csv"), data1);
         DataSet<Record, Attribute> data2 = new HashedDataSet<Record, Attribute>();
@@ -132,18 +132,18 @@ public class SchemaMatching {
             if(cor.getCausalCorrespondences()!=null) {
                 for(Correspondence<MatchableValue, Matchable> cause : cor.getCausalCorrespondences().get()) {
 //                    logger.info(String.format("%s (%.4f), ", cause.getFirstRecord().getValue(), cause.getSimilarityScore()));
-                        System.out.println(String.format("%s (%.4f), ", cause.getFirstRecord().getValue(), cause.getSimilarityScore()));
+                    System.out.println(String.format("%s (%.4f), ", cause.getFirstRecord().getValue(), cause.getSimilarityScore()));
                 }
 //                logger.info("");
             }
 //            System.out.println("\n");
 
         }
-    }
+    }*/
 
     public static void labelBased() throws Exception {
 
-        CSVReader reader = new CSVReader(new FileReader("chosen_offers_computer_LB.csv"));
+        CSVReader reader = new CSVReader(new FileReader("corpus_new.csv"));
         reader.readNext(); // read the header and ignore it
         String[] line; // store one line of offer
 
@@ -151,9 +151,12 @@ public class SchemaMatching {
         while ((line = reader.readNext()) != null) {
 
             //--------------------- create a csv out of each offer -----------------------
-            String node_id = line[1];
-            String url = line[0];
-            String kvp = line[2];
+
+            String node_id = line[2];
+            String url = line[1];
+            String kvp = line[3];
+            String cluster_id = line[0];
+
             if (kvp.length() == 0) {
                 continue;
             }
@@ -172,13 +175,13 @@ public class SchemaMatching {
                 }
             }
             FileWriter writer = new FileWriter("./offer.csv");
-            writer.append(node_id + "," + url + "," + keys);
+            writer.append(cluster_id + "," + ","+ node_id + "," + url + "," + keys);
             writer.close();
             //---------------------------------------------------------------------------
 
             // load data
             DataSet<Record, Attribute> data1 = new HashedDataSet<Record, Attribute>();
-            new CSVRecordReader(0).loadFromCSV(new File("dict_comp_formatted.csv"), data1);
+            new CSVRecordReader(0).loadFromCSV(new File("dict_computer_new_lb.csv"), data1);
             DataSet<Record, Attribute> data2 = new HashedDataSet<Record, Attribute>();
             new CSVRecordReader(0).loadFromCSV(new File("offer.csv"), data2);
 
@@ -189,10 +192,10 @@ public class SchemaMatching {
 
             // print results
             for (Correspondence<Attribute, Attribute> cor : correspondences.get()) {
-                File file = new File("./output_LB_computers_levenshtein.csv");
+                File file = new File("./output_LB_whole_corpus.csv");
                 FileWriter writer2 = new FileWriter(file, true);
                 BufferedWriter br = new BufferedWriter(writer2);
-                br.write(node_id + "," + url + "," + String.format("%s,%s,%s", cor.getFirstRecord().getName(), cor.getSecondRecord().getName(), cor.getSimilarityScore()) + "\n");
+                br.write(cluster_id + "," + node_id + "," + url + "," + String.format("%s,%s,%s", cor.getFirstRecord().getName(), cor.getSecondRecord().getName(), cor.getSimilarityScore()) + "\n");
                 br.close();
                 writer2.close();
             }
